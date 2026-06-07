@@ -6,7 +6,7 @@ from googleapiclient.discovery import build
 import os
 
 client = genai.Client(
-    api_key=os.getenv("AQ.Ab8RN6K1KJ1JPMW2erAZns_h4v6OFh3sMpsI5cjjDM8IuhXz2w")
+    api_key=os.getenv("GEMINI_API_KEY")
 )
 
 # Google Calendar
