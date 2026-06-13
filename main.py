@@ -13,6 +13,7 @@ from app.routes.chat import render_chat
 from app.routes.study_planner import render_study_planner
 from app.routes.study_progress import render_study_progress
 from app.routes.login import render_login
+from app.routes.db_viewer import render_db_viewer
 from app.services.auth_service import GoogleAuthRequiredException, get_google_flow
 import os
 
@@ -153,7 +154,7 @@ else:
 
     page = st.sidebar.radio(
         "Navigation",
-        ["Dashboard", "Assignments", "Exams", "Calendar", "AI Assistant", "Study Planner", "Study Progress"]
+        ["Dashboard", "Assignments", "Exams", "Calendar", "AI Assistant", "Study Planner", "Study Progress", "Database"]
     )
 
     try:
@@ -171,6 +172,8 @@ else:
             render_study_planner()
         elif page == "Study Progress":
             render_study_progress()
+        elif page == "Database":
+            render_db_viewer()
     except GoogleAuthRequiredException as auth_err:
         st.warning("📅 **Google Calendar Connection Required**")
         st.info("To use this feature, you need to connect your Google Calendar account so the app can sync and schedule your study sessions.")
