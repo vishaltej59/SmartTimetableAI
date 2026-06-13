@@ -1,6 +1,7 @@
 import streamlit as st
 from app.services.calendar_service import get_upcoming_events
 from app.services.gemini_service import summarize_events
+from app.services.auth_service import GoogleAuthRequiredException
 
 
 def render_calendar():
@@ -28,6 +29,8 @@ def render_calendar():
                 except Exception as e:
                     st.error(f"Failed to generate summary: {str(e)}")
 
+    except GoogleAuthRequiredException:
+        raise
     except Exception as e:
         st.error(f"Failed to fetch calendar events: {str(e)}")
         st.info(

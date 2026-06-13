@@ -12,6 +12,9 @@ from app.routes.exams import render_exams
 from app.routes.chat import render_chat
 from app.routes.study_planner import render_study_planner
 from app.routes.study_progress import render_study_progress
+from app.routes.login import render_login
+from app.services.auth_service import GoogleAuthRequiredException, get_google_flow
+import os
 
 # Initialize database
 init_database()
@@ -92,95 +95,83 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("Smart Timetable AI Agent")
+# Process Google OAuth callback redirection
+query_params = st.query_params
+if "code" in query_params and "state" in query_params:
+    code = query_params["code"]
+    user_id_str = query_params["state"]
+    try:
+        from app.database.db import get_connection
+        # Retrieve user from DB to authenticate them back if session was lost
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id_str,))
+        row = cursor.fetchone()
+        conn.close()
 
-# User Account Switcher / Registration in the Sidebar
-st.sidebar.subheader("User Account")
+        if row:
+            user = dict(row)
+            
+            # Fetch token and save credentials
+            flow = get_google_flow(user_id_str)
+            flow.code_verifier = "smart_timetable_ai_agent_secret_code_verifier_value_for_pkce_auth_flow_123456789"
+            flow.fetch_token(code=code)
+            creds = flow.credentials
 
-# Fetch all users
-from app.database.db import get_connection
-def get_all_users():
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users")
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+            # Save credentials for this specific user
+            token_path = f"credentials/token_{user_id_str}.json"
+            os.makedirs(os.path.dirname(token_path), exist_ok=True)
+            with open(token_path, "w") as token:
+                token.write(creds.to_json())
 
-users = get_all_users()
-
-if "current_user" not in st.session_state:
-    if users:
-        st.session_state.current_user = users[0]
-    else:
-        st.session_state.current_user = {"id": 1, "email": "localuser@example.com", "name": "Local User"}
-
-user_options = [f"{u['name']} ({u['email']})" for u in users]
-current_index = 0
-for idx, u in enumerate(users):
-    if u["id"] == st.session_state.current_user["id"]:
-        current_index = idx
-        break
-
-if user_options:
-    selected_user_str = st.sidebar.selectbox(
-        "Active Profile",
-        user_options,
-        index=current_index,
-        key="active_user_dropdown"
-    )
-    for u in users:
-        if f"{u['name']} ({u['email']})" == selected_user_str:
-            if st.session_state.current_user["id"] != u["id"]:
-                st.session_state.current_user = u
-                st.rerun()
-else:
-    st.sidebar.warning("No users registered yet.")
-
-# Register New User Form
-with st.sidebar.expander("Register New Account"):
-    new_name = st.text_input("Full Name", key="register_name")
-    new_email = st.text_input("Email Address", key="register_email")
-    if st.button("Create Profile"):
-        if new_name.strip() and new_email.strip():
-            conn = get_connection()
-            cursor = conn.cursor()
-            try:
-                cursor.execute(
-                    "INSERT INTO users (name, email) VALUES (?, ?)",
-                    (new_name.strip(), new_email.strip())
-                )
-                conn.commit()
-                # Set as current user
-                cursor.execute("SELECT * FROM users WHERE email = ?", (new_email.strip(),))
-                st.session_state.current_user = dict(cursor.fetchone())
-                conn.close()
-                st.success("Account created successfully!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Failed to create account: {e}")
-                conn.close()
+            # Log user in
+            st.session_state.current_user = user
+            st.success("Successfully connected to Google Calendar!")
+            st.query_params.clear()
+            st.rerun()
         else:
-            st.warning("Please enter name and email.")
+            st.error("OAuth callback: User ID from state parameter not found in database.")
+    except Exception as e:
+        st.error(f"Failed to authorize Google Calendar: {e}")
 
-st.sidebar.divider()
+# Check if user is authenticated
+if "current_user" not in st.session_state:
+    render_login()
+else:
+    st.title("Smart Timetable AI Agent")
 
-page = st.sidebar.radio(
-    "Navigation",
-    ["Dashboard", "Assignments", "Exams", "Calendar", "AI Assistant", "Study Planner", "Study Progress"]
-)
+    # User Account Info and Logout in the Sidebar
+    st.sidebar.subheader("User Account")
+    st.sidebar.markdown(f"👤 **{st.session_state.current_user['name']}**")
+    st.sidebar.caption(st.session_state.current_user['email'])
 
-if page == "Dashboard":
-    render_dashboard()
-elif page == "Assignments":
-    render_assignments()
-elif page == "Exams":
-    render_exams()
-elif page == "Calendar":
-    render_calendar()
-elif page == "AI Assistant":
-    render_chat()
-elif page == "Study Planner":
-    render_study_planner()
-elif page == "Study Progress":
-    render_study_progress()
+    if st.sidebar.button("Logout", key="logout_button"):
+        st.session_state.pop("current_user", None)
+        st.rerun()
+
+    st.sidebar.divider()
+
+    page = st.sidebar.radio(
+        "Navigation",
+        ["Dashboard", "Assignments", "Exams", "Calendar", "AI Assistant", "Study Planner", "Study Progress"]
+    )
+
+    try:
+        if page == "Dashboard":
+            render_dashboard()
+        elif page == "Assignments":
+            render_assignments()
+        elif page == "Exams":
+            render_exams()
+        elif page == "Calendar":
+            render_calendar()
+        elif page == "AI Assistant":
+            render_chat()
+        elif page == "Study Planner":
+            render_study_planner()
+        elif page == "Study Progress":
+            render_study_progress()
+    except GoogleAuthRequiredException as auth_err:
+        st.warning("📅 **Google Calendar Connection Required**")
+        st.info("To use this feature, you need to connect your Google Calendar account so the app can sync and schedule your study sessions.")
+        st.link_button("🔌 Connect Google Calendar", auth_err.authorization_url, type="primary")

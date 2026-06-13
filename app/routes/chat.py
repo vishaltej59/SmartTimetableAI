@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import pytz
 from app.services.ai_service import send_message_to_groq
 from app.services.calendar_service import create_event
+from app.services.auth_service import GoogleAuthRequiredException
 
 
 def render_chat():
@@ -29,6 +30,8 @@ def render_chat():
             st.write(f"**Calendar ID:** primary")
             st.write(f"**Start Time:** {start_dt.isoformat()}")
             st.write(f"**End Time:** {end_dt.isoformat()}")
+        except GoogleAuthRequiredException:
+            raise
         except Exception as e:
             st.error(f"Failed to create test event: {e}")
 
@@ -74,5 +77,7 @@ def render_chat():
                         st.markdown(cleaned_resp)
                     # The updated_messages contains the new history, so we sync it
                     st.session_state.messages = updated_messages
+                except GoogleAuthRequiredException:
+                    raise
                 except Exception as e:
                     st.error(f"Error communicating with AI: {e}")
