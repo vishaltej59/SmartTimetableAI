@@ -3,6 +3,7 @@ from app.services.assignment_service import get_assignments
 from app.services.exam_service import get_exams
 from app.database.db import get_connection
 from datetime import datetime
+import html
 
 def render_dashboard():
     user = st.session_state.current_user
@@ -177,7 +178,7 @@ def render_dashboard():
     
     <div class="dashboard-header">
         <div class="dashboard-date">{now_date}</div>
-        <h2 class="dashboard-greeting">Welcome back, {user['name']}! 👋</h2>
+        <h2 class="dashboard-greeting">Welcome back, {escaped_name}! 👋</h2>
         <p class="dashboard-summary">Here is your academic overview for today. Keep tracking your milestones!</p>
     </div>
     """, unsafe_allow_html=True)
@@ -269,10 +270,11 @@ def render_dashboard():
             for sess in today_sessions:
                 status_class = "completed" if sess["status"] == "COMPLETED" else "planned"
                 status_color = "#10B981" if sess["status"] == "COMPLETED" else "#2563EB"
+                escaped_subject = html.escape(sess['subject'])
                 st.markdown(
                     f"""
                     <div class="schedule-item {status_class}" style="border-left-color: {status_color};">
-                        <h4 style="margin: 0 0 4px 0; color: #0F172A; font-size: 1.05em; font-weight: 600;">{sess['subject']}</h4>
+                        <h4 style="margin: 0 0 4px 0; color: #0F172A; font-size: 1.05em; font-weight: 600;">{escaped_subject}</h4>
                         <p style="margin: 0; font-size: 0.85em; color: #475569;">Duration: <b>{sess['planned_hours']} hours</b> | Status: <span style="color: {status_color}; font-weight: 600;">{sess['status']}</span></p>
                     </div>
                     """,
@@ -294,10 +296,11 @@ def render_dashboard():
             for item in pending_assignments[:3]:
                 priority_color = "#EF4444" if item['priority'] == 'High' else "#F59E0B" if item['priority'] == 'Medium' else "#10B981"
                 priority_bg = "#FEF2F2" if item['priority'] == 'High' else "#FFF7ED" if item['priority'] == 'Medium' else "#F0FDF4"
+                escaped_title = html.escape(item['title'])
                 st.markdown(
                     f"""
                     <div class="saas-deadline-card">
-                        <h5 style="margin: 0 0 6px 0; color: #0F172A; font-weight: 600; font-size: 0.95em;">{item['title']}</h5>
+                        <h5 style="margin: 0 0 6px 0; color: #0F172A; font-weight: 600; font-size: 0.95em;">{escaped_title}</h5>
                         <p style="margin: 0 0 6px 0; font-size: 0.85em; color: #475569;">Due Date: <b>{item['due_date']}</b></p>
                         <span style="font-size: 0.75em; font-weight: 700; color: {priority_color}; background-color: {priority_bg}; padding: 3px 8px; border-radius: 6px;">{item['priority']} Priority</span>
                     </div>
@@ -310,10 +313,11 @@ def render_dashboard():
             st.info("No upcoming exams scheduled.")
         else:
             for exam in exams[:2]:
+                escaped_exam_subject = html.escape(exam['subject'])
                 st.markdown(
                     f"""
                     <div class="saas-deadline-card">
-                        <h5 style="margin: 0 0 6px 0; color: #0F172A; font-weight: 600; font-size: 0.95em;">{exam['subject']}</h5>
+                        <h5 style="margin: 0 0 6px 0; color: #0F172A; font-weight: 600; font-size: 0.95em;">{escaped_exam_subject}</h5>
                         <p style="margin: 0; font-size: 0.85em; color: #475569;">Exam Date: <b>{exam['exam_date']}</b> | Target Prep: <b>{exam['preparation_hours']} hours</b></p>
                     </div>
                     """,

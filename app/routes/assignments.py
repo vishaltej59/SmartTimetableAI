@@ -6,6 +6,7 @@ from app.services.assignment_service import (
     delete_assignment,
 )
 from datetime import datetime
+import html
 
 def render_assignments():
     st.markdown("""
@@ -136,21 +137,21 @@ def render_assignments():
             pri_class = f"badge-{item['priority'].lower()}"
             stat_class = f"badge-{item['status'].lower()}"
             
+            escaped_title = html.escape(item['title'])
+            
             # Format UI HTML card
-            st.markdown(f"""
-            <div class="task-card">
-                <div class="task-details">
-                    <h4 class="task-title">{item['title']}</h4>
-                    <div class="task-meta">
-                        <span>Due: <b>{item['due_date']}</b></span>
-                        <span>•</span>
-                        <span>Est: <b>{item['estimated_hours']}h</b></span>
-                        <span class="badge {pri_class}">{item['priority']}</span>
-                        <span class="badge {stat_class}">{item['status']}</span>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div class="task-card">'
+                        f'<div class="task-details">'
+                        f'<h4 class="task-title">{escaped_title}</h4>'
+                        f'<div class="task-meta">'
+                        f'<span>Due: <b>{item["due_date"]}</b></span>'
+                        f'<span>•</span>'
+                        f'<span>Est: <b>{item["estimated_hours"]}h</b></span>'
+                        f'<span class="badge {pri_class}">{item["priority"]}</span>'
+                        f'<span class="badge {stat_class}">{item["status"]}</span>'
+                        f'</div>'
+                        f'</div>'
+                        f'</div>', unsafe_allow_html=True)
             
             # Action Buttons below or side-by-side using columns for Streamlit interaction
             col_act1, col_act2, col_spacer = st.columns([1, 1, 5])

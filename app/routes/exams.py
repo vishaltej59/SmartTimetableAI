@@ -2,6 +2,7 @@ import streamlit as st
 from app.services.exam_service import add_exam, get_exams, delete_exam
 from app.services.study_progress_service import get_exam_readiness
 from datetime import datetime
+import html
 
 def render_exams():
     st.markdown("""
@@ -183,18 +184,17 @@ def render_exams():
             else:
                 readiness_class = "readiness-low"
 
+            escaped_subject = html.escape(item["subject"])
+            escaped_syllabus = html.escape(item["syllabus"]) if item["syllabus"] else ""
+
             syllabus_html = ""
-            if item["syllabus"]:
-                syllabus_html = f"""
-                <div class="exam-syllabus-box">
-                    <b>Syllabus:</b> {item['syllabus']}
-                </div>
-                """
+            if escaped_syllabus:
+                syllabus_html = f'<div class="exam-syllabus-box" style="white-space: pre-wrap;"><b>Syllabus:</b> {escaped_syllabus}</div>'
 
             st.markdown(f'<div class="exam-card">'
                         f'<div class="exam-header">'
                         f'<div class="exam-title-group">'
-                        f'<h4 class="exam-subject">{item["subject"]}</h4>'
+                        f'<h4 class="exam-subject">{escaped_subject}</h4>'
                         f'<div class="exam-date-meta"><span>Exam Date: <b>{item["exam_date"]}</b></span></div>'
                         f'</div>'
                         f'<span class="exam-badge {badge_class}">{badge_text}</span>'

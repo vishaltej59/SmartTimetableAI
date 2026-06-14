@@ -22,12 +22,25 @@ def render_calendar():
 
             st.divider()
             st.subheader("AI Summary")
-            with st.spinner("Generating summary with Gemini..."):
-                try:
-                    summary_text = summarize_events(event_text)
-                    st.write(summary_text)
-                except Exception as e:
-                    st.error(f"Failed to generate summary: {str(e)}")
+            
+            # Use session state to cache the summary and avoid hitting the rate limit on every rerun
+            summary_key = f"calendar_summary_{st.session_state.current_user['id']}"
+            
+            if summary_key in st.session_state:
+                st.info("💡 Calendar summary loaded from cache.")
+                st.write(st.session_state[summary_key])
+                if st.button("🔄 Regenerate AI Summary"):
+                    del st.session_state[summary_key]
+                    st.rerun()
+            else:
+                if st.button("✨ Generate AI Summary", type="primary"):
+                    with st.spinner("Generating summary with Gemini..."):
+                        try:
+                            summary_text = summarize_events(event_text)
+                            st.session_state[summary_key] = summary_text
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Failed to generate summary: {str(e)}")
 
     except GoogleAuthRequiredException:
         raise
