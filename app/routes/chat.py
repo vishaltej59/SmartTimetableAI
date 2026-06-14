@@ -151,5 +151,11 @@ def render_chat():
         except GoogleAuthRequiredException:
             raise
         except Exception as e:
-            st.error(f"Error communicating with AI: {e}")
+            err_msg = str(e)
+            if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+                st.warning("⚠️ **Gemini API Key Rate Limit/Quota Exceeded**\n\nYour API key has hit the free-tier limit. Please wait a minute or replace/upgrade your API key in the `.env` file.")
+            elif "403" in err_msg or "PERMISSION_DENIED" in err_msg:
+                st.error("🚫 **Access Denied (403)**\n\nGoogle has denied access for your API project. Please create a new project in Google AI Studio, generate a new API key, and update your `.env` file.")
+            else:
+                st.error(f"Error communicating with AI: {err_msg}")
 
