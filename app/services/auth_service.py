@@ -68,6 +68,11 @@ def authenticate_google(user_id="default"):
                 return creds
             except Exception as e:
                 logging.error(f"[GOOGLE AUTH] Failed to refresh token: {e}")
+                try:
+                    if os.path.exists(token_path):
+                        os.remove(token_path)
+                except Exception:
+                    pass
 
         logging.info(f"[GOOGLE AUTH] Initiating new OAuth flow for user {user_id}...")
         flow = get_google_flow(user_id)

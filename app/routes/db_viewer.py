@@ -3,8 +3,12 @@ import pandas as pd
 from app.database.db import get_connection
 
 def render_db_viewer():
-    st.subheader("Database Admin & Viewer")
-    st.caption("Inspect database tables, review schema details, and execute read-only SQL queries.")
+    st.markdown("""
+    <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 2em; font-weight: 800; color: #0F172A; letter-spacing: -1px; margin-bottom: 4px;">Database Admin & Viewer</h2>
+        <p style="color: #475569; font-size: 1.05em; margin: 0;">Inspect database tables, review schema details, and execute read-only SQL queries.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     # High level stats metrics
     try:

@@ -1,5 +1,7 @@
 import os
 
+os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
+
 
 class Config:
     # Database
@@ -9,7 +11,12 @@ class Config:
     TIMEZONE = os.getenv("TIMEZONE", "Asia/Kolkata")
 
     # Google Calendar API
-    GOOGLE_SCOPES = ["https://www.googleapis.com/auth/calendar"]
+    GOOGLE_SCOPES = [
+        "https://www.googleapis.com/auth/calendar",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "openid"
+    ]
     TOKEN_FILE = "credentials/token.json"
     CREDENTIALS_FILE = "credentials/credentials.json"
 

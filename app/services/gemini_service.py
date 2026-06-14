@@ -19,19 +19,19 @@ These are my upcoming calendar events:
 
 Summarize them in simple English.
 """
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            response = client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt
-            )
-            return response.text
-        except Exception as e:
-            # Retry if we hit a 503 or 429 error and we haven't exhausted our retries
-            if (
-                any(code in str(e) for code in ["503", "429"])
-                and attempt < max_retries - 1
-            ):
-                time.sleep(2**attempt)  # 1s, 2s backoff
-                continue
-            raise
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash", contents=prompt
+        )
+        return response.text
+    except Exception as e:
+        # If gemini-2.5-flash is unavailable or overloaded, instantly fallback to gemini-1.5-flash
+        if any(code in str(e) for code in ["503", "429"]):
+            try:
+                response = client.models.generate_content(
+                    model="gemini-1.5-flash", contents=prompt
+                )
+                return response.text
+            except Exception as fallback_err:
+                raise fallback_err
+        raise e
