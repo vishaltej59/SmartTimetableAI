@@ -21,12 +21,12 @@ if __name__ == '__main__':
         print("Success (gemini-2.5-flash):", response.text)
     except Exception as e:
         print(f"gemini-2.5-flash failed: {e}")
-        print("Instantly falling back to gemini-1.5-flash...")
+        print("Instantly falling back to gemini-flash-latest...")
         try:
             response = client.models.generate_content(
-                model="gemini-1.5-flash",
+                model="gemini-flash-latest",
                 contents="Say hello"
             )
-            print("Success (gemini-1.5-flash fallback):", response.text)
+            print("Success (gemini-flash-latest fallback):", response.text)
         except Exception as fallback_err:
             print("Fallback failed:", fallback_err)

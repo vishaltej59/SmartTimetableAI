@@ -1,6 +1,7 @@
 import os
 os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 import streamlit as st
+# pyrefly: ignore [missing-import]
 from dotenv import load_dotenv
 
 # Load environment variables first
@@ -163,6 +164,7 @@ if "code" in query_params and "state" in query_params:
             creds = flow.credentials
             
             # Fetch user email and name using Google API
+            # pyrefly: ignore [missing-import]
             from googleapiclient.discovery import build
             service = build('oauth2', 'v2', credentials=creds)
             user_info = service.userinfo().get().execute()
@@ -243,6 +245,8 @@ else:
         "Navigation",
         [
             "📊 Dashboard", 
+            "💬 AI Assistant",
+            "📈 Study Progress",
             "🕒 Timetable", 
             "📅 Calendar", 
             "📝 Assignments", 
@@ -280,6 +284,12 @@ else:
         if page_name == "Dashboard":
             from app.routes.dashboard import render_dashboard
             render_dashboard()
+        elif page_name == "AI Assistant":
+            from app.routes.chat import render_chat
+            render_chat()
+        elif page_name == "Study Progress":
+            from app.routes.study_progress import render_study_progress
+            render_study_progress()
         elif page_name == "Timetable":
             from app.routes.study_planner import render_study_planner
             render_study_planner()

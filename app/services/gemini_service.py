@@ -25,11 +25,11 @@ Summarize them in simple English.
         )
         return response.text
     except Exception as e:
-        # If gemini-2.5-flash is unavailable or overloaded, instantly fallback to gemini-1.5-flash
-        if any(code in str(e) for code in ["503", "429"]):
+        # If gemini-2.5-flash is unavailable or overloaded, instantly fallback to gemini-flash-latest
+        if any(code in str(e) for code in ["503", "429"]) or "RESOURCE_EXHAUSTED" in str(e):
             try:
                 response = client.models.generate_content(
-                    model="gemini-1.5-flash", contents=prompt
+                    model="gemini-flash-latest", contents=prompt
                 )
                 return response.text
             except Exception as fallback_err:
