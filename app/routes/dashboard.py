@@ -7,6 +7,7 @@ import html
 
 def render_dashboard():
     user = st.session_state.current_user
+    escaped_name = html.escape(user['name']) if user.get('name') else ""
     user_id = user["id"]
     
     # Current date formatting
